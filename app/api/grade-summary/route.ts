@@ -40,28 +40,67 @@ function fallback(mode: Mode) {
 △ 論理の流れが分かる
 ○ 200字以内でまとめている
 △ 表現が簡潔である`;
+
+  【字数評価】
+生徒要約の字数は${charCount}字です。
+字数評価は${lengthMark}です。
+
+評価表の「字数」の項目は必ず次のようにしてください。
+${lengthMark} 字数（${charCount}字／200字）
 }
 
-function buildPrompt(mode: Mode, material: ReturnType<typeof getMaterial>, summary: string, revisedSummary?: string) {
+function buildPrompt(
+  mode: Mode,
+  material: ReturnType<typeof getMaterial>,
+  summary: string,
+  revisedSummary?: string,
+  charCount?: number,
+  lengthMark?: string
+) {
   if (!material) return '';
 
   const common = `
 あなたは高校現代文を専門とする国語教師です。
-生徒の要約を添削してください。
+高校2年生の定期考査の採点基準で、生徒の要約を添削してください。
 
 【最重要方針】
-模範要約は唯一の正解ではなく、参考例です。
-模範要約との一致度ではなく、本文理解と要約としての質を評価してください。
-表現・語順・構成が模範要約と異なっていても、本文の重要内容を適切に押さえていれば高く評価してください。
-もし生徒要約が模範要約とほぼ同等の重要内容を含んでいる場合は、95〜100点を付けてください。
-細かな表現差だけで減点してはいけません。
+・模範要約は唯一の正解ではなく参考例です。
+・模範要約との一致度ではなく、本文理解と要約としての質を評価してください。
+・表現・語順・構成が異なっていても、本文の重要内容を適切にまとめていれば高く評価してください。
+・細かな言い回しだけで減点してはいけません。
+・採点は絶対評価で行ってください。
+
+【100点の基準】
+100点は次の条件をすべて満たす要約だけです。
+
+①本文の中心主張を正確にまとめている。
+②重要な理由・論理展開・結論まで過不足なくまとめている。
+③具体例に偏らず、筆者の考えを抽象化して要約している。
+④文章が自然で読みやすい。
+⑤180〜200字程度で簡潔にまとめられている。
+
+【採点の目安】
+95〜100点：本文の重要内容をほぼ完全にまとめている。
+90〜94点：重要内容はほぼ押さえているが、一部不足がある。
+80〜89点：主張は理解しているが、重要な論理や理由が複数不足している。
+70〜79点：大意は理解しているが、本文理解や論理の流れに不足がある。
+69点以下：本文理解や要約として大きな課題がある。
+
+【字数について】
+・200字以内で評価してください。
+・180〜200字を最も望ましい字数とします。
+・170字未満の場合は内容が良くても減点対象です。
+・150字未満は原則として80点以上を付けないでください。
+・120字未満は大幅な減点対象です。
+・ただし、字数だけで評価せず、内容とのバランスを考慮してください。
 
 【評価観点】
-・本文の中心主張を押さえているか
-・重要な理由や論理の流れを押さえているか
-・具体例に偏らず、抽象化してまとめているか
-・200字以内で簡潔に表現できているか
-・文意が自然で読みやすいか
+・本文の中心主張
+・重要な理由・論理展開
+・結論までまとめられているか
+・具体例に偏らず抽象化できているか
+・200字以内（望ましくは180〜200字）
+・文章の分かりやすさ
 
 【教材名】
 ${material.title}
@@ -153,6 +192,8 @@ export async function POST(req: Request) {
       return Response.json({ error: '教材が見つかりません。' }, { status: 404 });
     }
     const target = actualMode === 'revision' ? revisedSummary : summary;
+    const charCount = countJapaneseChars(target);
+const lengthMark = getLengthEvaluation(charCount);
     if (!target || String(target).trim().length === 0) {
       return Response.json({ error: '要約を入力してください。' }, { status: 400 });
     }
@@ -164,7 +205,24 @@ export async function POST(req: Request) {
       return Response.json({ result: fallback(actualMode), mode: 'fallback' });
     }
 
-    const prompt = buildPrompt(actualMode, material, String(summary || ''), String(revisedSummary || ''));
+    function countJapaneseChars(text: string) {
+  return text.replace(/\s/g, '').length;
+}
+
+function getLengthEvaluation(count: number) {
+  if (count >= 180 && count <= 200) return '○';
+  if (count >= 170 && count <= 179) return '△';
+  return '×';
+}
+    
+    const prompt = buildPrompt(
+  actualMode,
+  material,
+  String(summary || ''),
+  String(revisedSummary || ''),
+  charCount,
+  lengthMark
+);
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
