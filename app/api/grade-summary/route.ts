@@ -41,14 +41,6 @@ function fallback(mode: Mode) {
 ○ 200字以内でまとめている
 △ 表現が簡潔である`;
 
-  【字数評価】
-生徒要約の字数は${charCount}字です。
-字数評価は${lengthMark}です。
-
-評価表の「字数」の項目は必ず次のようにしてください。
-${lengthMark} 字数（${charCount}字／200字）
-}
-
 function buildPrompt(
   mode: Mode,
   material: ReturnType<typeof getMaterial>,
@@ -117,7 +109,12 @@ ${material.modelSummary}
 
 【初回の生徒要約】
 ${summary}
-
+【字数評価】
+生徒要約は${charCount}字です。
+この値を必ず使用してください。
+評価表には必ず
+${lengthMark} 字数（${charCount}字／200字）
+と表示してください。
 【改善版の生徒要約】
 ${revisedSummary || ''}
 
