@@ -5,6 +5,22 @@ import { useEffect, useState } from 'react';
 type Material = { id: string; title: string; author: string };
 
 export default function Page() {
+  const publishStart = new Date("2026-06-29T08:00:00+09:00");
+  const publishEnd = new Date("2026-07-03T12:00:00+09:00");
+  const now = new Date();
+
+  if (now < publishStart || now > publishEnd) {
+    return (
+      <main className="min-h-screen bg-[#f7f1e8] p-6">
+        <section className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow">
+          <h1 className="text-2xl font-bold">現在は公開期間外です</h1>
+          <p className="mt-4">このアプリは、テスト前の学習期間のみ利用できます。</p>
+          <p className="mt-2 text-sm text-gray-600">公開期間：2026年6月29日 8:00 ～ 2026年7月3日 12:00</p>
+          <p className="mt-6 font-semibold">授業受講生徒限定・転載禁止</p>
+        </section>
+      </main>
+    );
+  }
   const [materials, setMaterials] = useState<Material[]>([]);
   const [materialId, setMaterialId] = useState('');
   const [summary, setSummary] = useState('');
