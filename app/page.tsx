@@ -66,6 +66,8 @@ export default function Page() {
     <div className="card">
       <h1>要約添削アプリ <span className="badge">2年生用</span></h1>
       <p className="muted">本文は表示されません。教科書・授業プリントを見ながら、200字以内で要約してください。AI添削は参考評価です。</p>
+  <p className="muted">授業受講生徒限定・転載禁止</p>
+<p className="muted">公開期間：2026年6月29日 8:00 ～ 2026年7月3日 12:00</p>
     </div>
 
     <div className="card">
